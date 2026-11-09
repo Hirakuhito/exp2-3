@@ -1,0 +1,112 @@
+% ---- Font settings ------
+\usepackage{luatexja-fontspec}
+\setmainfont{Noto Serif}
+\setmainjfont{Noto Serif CJK JP}
+
+% --- Margin ---
+\usepackage[margin=25truemm]{geometry}
+
+% --- TOC ---
+\usepackage[hidelinks]{hyperref}
+\usepackage{tocloft}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\setlength{\cftsecnumwidth}{4em}
+
+% --- Between the line ---
+\usepackage{setspace}
+\setstretch{1.15}
+
+% --- Heading --- 
+\usepackage{titlesec}
+\titlespacing{\section}{0pt}{2em}{0.8em}
+
+% --- Formula ---
+\usepackage{amsmath, amssymb}
+
+% --- Figure ---
+\usepackage{graphicx}
+
+% --- Code ----
+\usepackage{xcolor}
+\usepackage{minted}
+\setminted{
+  bgcolor=black!3,
+  frame=lines,
+  framesep=2mm,
+  fontsize=\footnotesize,
+  linenos,
+  breaklines=true
+}
+\renewcommand{\listingscaption}{ソースコード}
+
+% --- Bibliography ---
+\usepackage{tocbibind}
+
+% --- URL ---
+\usepackage{url}
+
+% --- Assignment Env ---
+\newcommand{\courcetitle}{講義名}
+\newcommand{\reporttitle}{課題名}
+\newcommand{\affiliation}{工学部 情報エレクトロニクス学科}
+\newcommand{\studentyear}{学士3年}
+\newcommand{\studentnum}{02246910}
+\newcommand{\faculitynum}{ICT26903}
+\newcommand{\studentname}{吉野 拓人}
+\newcommand{\mailaddress}{takuto.yoshino.l3@elms.hokudai.ac.jp}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\reporttitle}
+\cfoot{\thepage}
+
+% --- env for separating by assignment ---
+\newenvironment{maintask}[1]{
+  \clearpage
+  \section*{課題 #1}
+  \addcontentsline{toc}{section}{課題 #1}
+}{}
+
+\newenvironment{extask}[1]{
+  \clearpage
+  \section*{発展課題 #1}
+  \addcontentsline{toc}{section}{発展課題 #1}
+}{}
+
+% --- Custom Title ---
+\newcommand{\makecustomtitle}{
+  \begin{titlepage}
+    \begin{center}
+      \vspace*{30mm} % 上部の余白
+      
+      % 講義名とレポート回数
+      {\Large \courcetitle{}} \\[2em]
+      {\huge \textbf{\reporttitle}} \\
+      
+      \vspace{60mm} % 中央の大きな空白が「感覚」を生みます
+      
+      % 個人情報セクション（左寄せに近い中央配置）
+      \begin{minipage}{0.8\textwidth}
+        \centering
+        \large
+        \begin{tabular}{clp{10cm}}
+          学部学科  &: \quad \affiliation \\[0.8em]
+          学年      &: \quad \studentyear \\[0.8em]
+          学生番号  &: \quad \studentnum \\[0.8em]
+          学部番号  &: \quad \faculitynum \\[0.8em]
+          学生氏名  &: \quad \studentname \\[0.8em]
+          メールアドレス &: \quad \mailaddress \\[0.8em]
+        \end{tabular}
+      \end{minipage}
+
+      \vfill % 残りのスペースをすべて埋める
+      
+      % 提出日
+      {\large 提出日 ： \number\year 年 \number\month 月 \number\day 日}
+      
+      \vspace*{20mm}
+    \end{center}
+  \end{titlepage}
+  \clearpage
+}
