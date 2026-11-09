@@ -28,16 +28,36 @@
 
 % --- Code ----
 \usepackage{xcolor}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{newfloat}
+\usepackage{etoolbox}
 \usepackage{minted}
 \setminted{
   bgcolor=black!3,
   frame=lines,
-  framesep=2mm,
+  framesep=1mm,
   fontsize=\footnotesize,
-  linenos,
-  breaklines=true
+  linenos=false,
+  breaklines=true,
+  autogobble=true
 }
 \renewcommand{\listingscaption}{ソースコード}
+
+% 端末出力用のフロート環境（「出力 1」と表示される）
+\DeclareFloatingEnvironment[fileext=lop, listname=出力一覧]{termout}
+\SetupFloatingEnvironment{termout}{name=出力}
+
+% キャプション設定: 上置き
+\captionsetup[termout]{position=top, skip=0pt, aboveskip=0pt, belowskip=6pt, labelsep=colon}
+\captionsetup[listing]{position=top, skip=0pt, aboveskip=0pt, belowskip=0pt, labelsep=colon}
+
+% [H] フロートの前後の空き（既定 12pt）を詰める
+\setlength{\intextsep}{2pt plus 2pt minus 2pt}
+
+% 出力ブロック内の minted が足す余分な縦空きを消す
+\AtBeginEnvironment{termout}{\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}}
+\AtBeginEnvironment{listing}{\setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}}
 
 % --- Bibliography ---
 \usepackage{tocbibind}
@@ -46,8 +66,8 @@
 \usepackage{url}
 
 % --- Assignment Env ---
-\newcommand{\courcetitle}{講義名}
-\newcommand{\reporttitle}{課題名}
+\newcommand{\courcetitle}{情報理工学実験II}
+\newcommand{\reporttitle}{ネットワークプログラミング}
 \newcommand{\affiliation}{工学部 情報エレクトロニクス学科}
 \newcommand{\studentyear}{学士3年}
 \newcommand{\studentnum}{02246910}
@@ -63,13 +83,11 @@
 
 % --- env for separating by assignment ---
 \newenvironment{maintask}[1]{
-  \clearpage
   \section*{課題 #1}
   \addcontentsline{toc}{section}{課題 #1}
 }{}
 
 \newenvironment{extask}[1]{
-  \clearpage
   \section*{発展課題 #1}
   \addcontentsline{toc}{section}{発展課題 #1}
 }{}
