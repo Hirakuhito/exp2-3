@@ -1,0 +1,37 @@
+\begin{maintask}{B}
+  \subsection*{課題内容}
+  IPv4ではARP，IPv6では近隣探索で相手のMACアドレスを調べ，そのパケットのやり取りを確認した.
+  
+  \subsection*{実験方法}
+  \begin{enumerate}
+    \item 実行前の近隣キャッシュを記録
+      \begin{minted}{zsh}
+        ip ne
+      \end{minted}
+ 
+    \item 1つ目のターミナルでキャプチャを開始
+      \begin{minted}{zsh}
+        tcpdump -i eth1 -s 0 -w day1_B.pcap 'not port 4200'
+      \end{minted}
+ 
+    \item キャプチャ中に，別のターミナルでarping，ndisc6を実行
+      \begin{minted}{zsh}
+        (IPv4) arping -c 3 172.28.0.200
+        (IPv6) ndisc6 2001:2f8:40:11da::200 eth1
+      \end{minted}
+ 
+    \item 実行後に近隣キャッシュを再度記録
+      \begin{minted}{zsh}
+        ip ne
+      \end{minted}
+ 
+    \item キャプチャ側でCtrl-Cを押し，pcapをダウンロードしてWiresharkで開き，次のフィルタを適用
+      \begin{minted}{text}
+        arp || icmpv6.type == 135 || icmpv6.type == 136
+      \end{minted}
+      ARPのRequest/Reply，NSとNA（Target link-layer addressが見える状態）を選択して展開し，撮影する．
+  \end{enumerate}
+  \subsection*{結果}
+
+
+\end{maintask}
