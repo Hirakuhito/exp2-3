@@ -1,0 +1,282 @@
+\begin{maintask}{F}
+  \subsection*{課題内容}
+  HTTP/3対応のWebサイトにcurlでアクセスし，通信をキャプチャしてHTTP/2と比較した．
+
+  \subsection*{実験方法}
+  \begin{enumerate}
+    \item HTTP/3でアクセスし，ヘッダを取得
+      \begin{minted}{zsh}
+        tcpdump -i eth1 -s 0 -w day2_F_h3.pcap 'not port 4200'    (1つ目のターミナル)
+        curl -I --http3 https://www.cloudflare.com                (2つ目のターミナル)
+      \end{minted}
+
+    \item 比較用にHTTP/2でアクセス
+      \begin{minted}{zsh}
+        tcpdump -i eth1 -s 0 -w day2_F_h2.pcap 'not port 4200'    (1つ目のターミナル)
+        curl -I --http2 https://www.cloudflare.com                (2つ目のターミナル)
+      \end{minted}
+
+    \item 表にないHTTP/3対応サイトの探索．alt-svcヘッダにh3が含まれるサイトを探す
+      \begin{minted}{zsh}
+        curl -sI https://<候補のURL> | grep -i alt-svc
+      \end{minted}
+
+    \item 各pcapをWiresharkで開き，次のフィルタを適用
+      \begin{minted}{text}
+        (HTTP/3) quic
+        (HTTP/2) tcp.port == 443
+      \end{minted}
+  \end{enumerate}
+
+  \subsection*{結果}
+  HTTP/3・HTTP/2それぞれのtcpdumpとcurlの実行結果を出力\ref{out:f_h3}，出力\ref{out:f_h2}に，alt-svcの探索結果を出力\ref{out:f_altsvc}に示した．
+
+  \begin{termout}[H]
+    \caption{HTTP/3 の tcpdump と curl の実行結果}\label{out:f_h3}
+    \begin{minted}{zsh}
+    guest@host82:~$ tcpdump -i eth1 -s 0 -w day2_F_h3.pcap 'not port 4200'
+    tcpdump: listening on eth1, link-type EN10MB (Ethernet), capture size 262144 bytes
+    ^C213 packets captured
+    215 packets received by filter
+    0 packets dropped by kernel
+    
+    guest@host82:~$ curl -I --http3 https://www.cloudflare.com 
+    HTTP/3 103 
+    link: </fonts/Kunst%20Grotesk%20Regular.woff2>; as=font; crossorigin; rel=preload; type=font/woff2, 
+    </fonts/Kunst%20Grotesk%20Medium.woff2>; as=font; crossorigin; rel=preload; type=font/woff2, <https:
+    //ot.www.cloudflare.com>; crossorigin; rel=preconnect, <https://imagedelivery.net>; crossorigin; rel
+    =preconnect, </static/hero-poster.avif>; as=image; fetchpriority=high; rel=preload; type=image/avif
+
+    HTTP/3 200 
+    date: Mon, 09 Nov 2026 16:22:59 GMT
+    content-type: text/html; charset=utf-8
+    link: <https://www.cloudflare.com/.well-known/api-catalog>; rel="api-catalog", <https://www.cloudfla
+    re.com/.well-known/agents.json>; rel="service-desc", <https://www.cloudflare.com/.well-known/webmcp.
+    json>; rel="service-desc", <https://www.cloudflare.com/openapi.json>; rel="service-desc", <https://w
+    ww.cloudflare.com/llms.txt>; rel="service-doc", <https://www.cloudflare.com/sitemap.xml>; rel="sitem
+    ap", </fonts/Kunst%20Grotesk%20Regular.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin,
+    </fonts/Kunst%20Grotesk%20Medium.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin, <htt
+    ps://ot.www.cloudflare.com>; rel=preconnect; crossorigin, <https://imagedelivery.net>; rel=preconnec
+    t; crossorigin, </static/hero-poster.avif>; rel=preload; as=image; type="image/avif"; fetchpriority=
+    high
+    cache-control: no-store
+    server: cloudflare
+    vary: accept-encoding
+    strict-transport-security: max-age=31536000; includeSubDomains
+    content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:/
+    /static.cloudflareinsights.com https://static-staging.cloudflareinsights.com https://challenges.clou
+    dflare.com https://*.onetrust.com https://cdn.cookielaw.org https://ot.www.cloudflare.com https://ww
+    w.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://google
+    ads.g.doubleclick.net https://adservice.google.com https://cdn.bizible.com https://js.adsrvr.org htt
+    ps://*.marketo.net https://platform.twitter.com https://static.ads-twitter.com https://scripts.deman
+    dbase.com https://tag.demandbase.com https://*.6sc.co https://*.qualified.com https://snap.licdn.com
+    https://bat.bing.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self
+    ' data:; connect-src 'self' https://*.googletagmanager.com https://*.google-analytics.com https://*.
+    google.com https://*.doubleclick.net https://www.googleadservices.com https://translate.googleapis.c
+    om https://cdn.bizible.com https://js.adsrvr.org https://*.marketo.net https://ads-twitter.com https
+    ://analytics.twitter.com https://*.twimg.com https://api.demandbase.com https://scripts.demandbase.c
+    om https://tag.demandbase.com https://tag-logger.demandbase.com https://api.company-target.com https
+    ://*.6sc.co https://epsilon.6sense.com https://*.qualified.com https://*.ads.linkedin.com https://ww
+    w.linkedin.com https://bat.bing.com https: wss://*.qualified.com wss://*.registrar.cloudflare.com; f
+    rame-src https://*.adsrvr.org https://*.cloudflare.com https://*.videodelivery.net https://*.cloudfl
+    arestream.com https://www.googletagmanager.com https://*.qualified.com https://td.doubleclick.net ht
+    tps://bid.g.doubleclick.net https://9309168.fls.doubleclick.net https://9973066.fls.doubleclick.net 
+    https://s.company-target.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestor
+    s 'none'; worker-src 'self' blob:; child-src 'self' blob:; upgrade-insecure-requests                
+    cross-origin-opener-policy: unsafe-none                                                             
+    cross-origin-resource-policy: cross-origin                                                          
+    permissions-policy: geolocation=(), camera=(), microphone=()                                        
+    referrer-policy: strict-origin-when-cross-origin                                                    
+    guest@host82:~$ curl -I --http3 https://www.cloudflare.com 
+    HTTP/3 103 
+    link: </fonts/Kunst%20Grotesk%20Regular.woff2>; as=font; crossorigin; rel=preload; type=font/woff2, 
+    </fonts/Kunst%20Grotesk%20Medium.woff2>; as=font; crossorigin; rel=preload; type=font/woff2, <https:
+    //ot.www.cloudflare.com>; crossorigin; rel=preconnect, <https://imagedelivery.net>; crossorigin; rel
+    =preconnect, </static/hero-poster.avif>; as=image; fetchpriority=high; rel=preload; type=image/avif
+
+    HTTP/3 200 
+    date: Mon, 09 Nov 2026 16:23:32 GMT
+    content-type: text/html; charset=utf-8
+    link: <https://www.cloudflare.com/.well-known/api-catalog>; rel="api-catalog", <https://www.cloudfla
+    re.com/.well-known/agents.json>; rel="service-desc", <https://www.cloudflare.com/.well-known/webmcp.
+    json>; rel="service-desc", <https://www.cloudflare.com/openapi.json>; rel="service-desc", <https://w
+    ww.cloudflare.com/llms.txt>; rel="service-doc", <https://www.cloudflare.com/sitemap.xml>; rel="sitem
+    ap", </fonts/Kunst%20Grotesk%20Regular.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin,
+    </fonts/Kunst%20Grotesk%20Medium.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin, <htt
+    ps://ot.www.cloudflare.com>; rel=preconnect; crossorigin, <https://imagedelivery.net>; rel=preconnec
+    t; crossorigin, </static/hero-poster.avif>; rel=preload; as=image; type="image/avif"; fetchpriority=
+    high
+    cache-control: no-store
+    server: cloudflare
+    vary: accept-encoding
+    strict-transport-security: max-age=31536000; includeSubDomains
+    content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:/
+    /static.cloudflareinsights.com https://static-staging.cloudflareinsights.com https://challenges.clou
+    dflare.com https://*.onetrust.com https://cdn.cookielaw.org https://ot.www.cloudflare.com https://ww
+    w.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://google
+    ads.g.doubleclick.net https://adservice.google.com https://cdn.bizible.com https://js.adsrvr.org htt
+    ps://*.marketo.net https://platform.twitter.com https://static.ads-twitter.com https://scripts.deman
+    dbase.com https://tag.demandbase.com https://*.6sc.co https://*.qualified.com https://snap.licdn.com
+    https://bat.bing.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self
+    ' data:; connect-src 'self' https://*.googletagmanager.com https://*.google-analytics.com https://*.
+    google.com https://*.doubleclick.net https://www.googleadservices.com https://translate.googleapis.c
+    om https://cdn.bizible.com https://js.adsrvr.org https://*.marketo.net https://ads-twitter.com https
+    ://analytics.twitter.com https://*.twimg.com https://api.demandbase.com https://scripts.demandbase.c
+    om https://tag.demandbase.com https://tag-logger.demandbase.com https://api.company-target.com https
+    ://*.6sc.co https://epsilon.6sense.com https://*.qualified.com https://*.ads.linkedin.com https://ww
+    w.linkedin.com https://bat.bing.com https: wss://*.qualified.com wss://*.registrar.cloudflare.com; f
+    rame-src https://*.adsrvr.org https://*.cloudflare.com https://*.videodelivery.net https://*.cloudfl
+    arestream.com https://www.googletagmanager.com https://*.qualified.com https://td.doubleclick.net ht
+    tps://bid.g.doubleclick.net https://9309168.fls.doubleclick.net https://9973066.fls.doubleclick.net 
+    https://s.company-target.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestor
+    s 'none'; worker-src 'self' blob:; child-src 'self' blob:; upgrade-insecure-requests                
+    cross-origin-opener-policy: unsafe-none                                                             
+    cross-origin-resource-policy: cross-origin                                                          
+    permissions-policy: geolocation=(), camera=(), microphone=()                                        
+    referrer-policy: strict-origin-when-cross-origin                                                    
+    x-content-type-options: nosniff                                                                     
+    x-frame-options: SAMEORIGIN                                                                         
+    x-served-by: marketing-site                                                                         
+    x-xss-protection: 1; mode=block                                                                     
+    x-rm: GW                                                                                            
+    set-cookie: _ga=GA1.1.67539260-63f5-4871-b2c2-482b79e35f7c; Expires=Thu, 09 Dec 2027 16:23:32 GMT; P
+    ath=/                                                                                               
+    set-cookie: cfz_google-analytics_v4={"nzcr_ga4":{"v":"67539260-63f5-4871-b2c2-482b79e35f7c","e":1828
+    369412114}}; Expires=Thu Dec 09 2027 16:23:32 GMT+0000 (Coordinated Universal Time); HttpOnly; SameS
+    ite=Lax; Path=/; Secure                                                                             
+    set-cookie: cfz_adobe={"MsVJ_ecid":{"v":"CiY2NjE1MTE2OTk0OTMwNTQxMjk1MTU4ODUxNjU5MDg5MzYwMDM5NVIOCOf
+    4_IicNCoDVkE2MALwAef4_IicNA==","e":1828369412276}}; Expires=Thu Dec 09 2027 16:23:32 GMT+0000 (Coord
+    inated Universal Time); HttpOnly; SameSite=Lax; Path=/; Secure                                      
+    set-cookie: kndctr_8AD56F28618A50850A495FB6_AdobeOrg_identity=CiY2NjE1MTE2OTk0OTMwNTQxMjk1MTU4ODUxNj
+    U5MDg5MzYwMDM5NVIOCOf4_IicNCoDVkE2MALwAef4_IicNA==; Expires=Thu, 09 Dec 2027 16:23:32 GMT; Path=/; S
+    ecure; SameSite=Lax                                                                                 
+    set-cookie: __cf_bm=5Ms3xHo.o1iXyvqnFmRzqaf3WmN2oHYlwJXTn4HzpG8-1794241412.0977979-1.0.1.1-GAFsMCZ4h
+    uL6qXC1P0rikt8pr4dSoi0T7WTvWJ8q6QDacB_7DdDDnIBwTBoxv38MBcfUL1i.qfRS_BGoi.d7F8CKk..Po6.BHwqot3vfOA8Td
+    rKZy_cCigikr09s8ynglMfgtLERvReZNLL6y4D2Jg; HttpOnly; SameSite=None; Partitioned; Secure; Path=/; Dom
+    ain=www.cloudflare.com; Expires=Mon, 09 Nov 2026 16:53:32 GMT                                       
+    report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/repo
+    rt/v4?s=GNeiMuxOlp2Tx0Z7PyWW3SSGR2%2Bc4H2S1mHLsd5NhTwxbUc5cFmmn6nKf%2FJpEPEn%2BujWZ0FRFcqXKBBlhiA8rk
+    Ew9aXuo2iSpieSQvVb33aZw6dzG7eSgGiu9uHLlPKYnFnbhGbssSXkPS7ONfj27Q%3D%3D"}]}                          
+    nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}                                 
+    priority: u=3,i=?0                                                                                  
+    cf-ray: a57e29999894aa18-NRT                                                                        
+    alt-svc: h3=":443"; ma=86400                                                                        
+    server-timing: cfExtPri   
+    \end{minted}
+  \end{termout}
+
+  \begin{termout}[H]
+    \caption{HTTP/2 の tcpdump と curl の実行結果}\label{out:f_h2}
+    \begin{minted}{zsh}
+    guest@host82:~$ tcpdump -i eth1 -s 0 -w day2_F_h2.pcap 'not port 4200'
+    tcpdump: listening on eth1, link-type EN10MB (Ethernet), capture size 262144 bytes
+    ^C112 packets captured
+    114 packets received by filter
+    0 packets dropped by kernel
+
+    guest@host82:~$ curl -I --http2 https://www.cloudflare.com
+    HTTP/2 103 
+    link: </fonts/Kunst%20Grotesk%20Regular.woff2>; as=font; crossorigin; rel=preload; type=font/woff2, 
+    </fonts/Kunst%20Grotesk%20Medium.woff2>; as=font; crossorigin; rel=preload; type=font/woff2, <https:
+    //ot.www.cloudflare.com>; crossorigin; rel=preconnect, <https://imagedelivery.net>; crossorigin; rel
+    =preconnect, </static/hero-poster.avif>; as=image; fetchpriority=high; rel=preload; type=image/avif
+
+    HTTP/2 200 
+    date: Mon, 09 Nov 2026 16:26:18 GMT
+    content-type: text/html; charset=utf-8
+    link: <https://www.cloudflare.com/.well-known/api-catalog>; rel="api-catalog", <https://www.cloudfla
+    re.com/.well-known/agents.json>; rel="service-desc", <https://www.cloudflare.com/.well-known/webmcp.
+    json>; rel="service-desc", <https://www.cloudflare.com/openapi.json>; rel="service-desc", <https://w
+    ww.cloudflare.com/llms.txt>; rel="service-doc", <https://www.cloudflare.com/sitemap.xml>; rel="sitem
+    ap", </fonts/Kunst%20Grotesk%20Regular.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin,
+    </fonts/Kunst%20Grotesk%20Medium.woff2>; rel=preload; as=font; type="font/woff2"; crossorigin, <htt
+    ps://ot.www.cloudflare.com>; rel=preconnect; crossorigin, <https://imagedelivery.net>; rel=preconnec
+    t; crossorigin, </static/hero-poster.avif>; rel=preload; as=image; type="image/avif"; fetchpriority=
+    high
+    cache-control: no-store
+    vary: accept-encoding
+    strict-transport-security: max-age=31536000; includeSubDomains
+    content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:/
+    /static.cloudflareinsights.com https://static-staging.cloudflareinsights.com https://challenges.clou
+    dflare.com https://*.onetrust.com https://cdn.cookielaw.org https://ot.www.cloudflare.com https://ww
+    w.googletagmanager.com https://tagmanager.google.com https://www.googleadservices.com https://google
+    ads.g.doubleclick.net https://adservice.google.com https://cdn.bizible.com https://js.adsrvr.org htt
+    ps://*.marketo.net https://platform.twitter.com https://static.ads-twitter.com https://scripts.deman
+    dbase.com https://tag.demandbase.com https://*.6sc.co https://*.qualified.com https://snap.licdn.com
+    https://bat.bing.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self
+    ' data:; connect-src 'self' https://*.googletagmanager.com https://*.google-analytics.com https://*.
+    google.com https://*.doubleclick.net https://www.googleadservices.com https://translate.googleapis.c
+    om https://cdn.bizible.com https://js.adsrvr.org https://*.marketo.net https://ads-twitter.com https
+    ://analytics.twitter.com https://*.twimg.com https://api.demandbase.com https://scripts.demandbase.c
+    om https://tag.demandbase.com https://tag-logger.demandbase.com https://api.company-target.com https
+    ://*.6sc.co https://epsilon.6sense.com https://*.qualified.com https://*.ads.linkedin.com https://ww
+    w.linkedin.com https://bat.bing.com https: wss://*.qualified.com wss://*.registrar.cloudflare.com; f
+    rame-src https://*.adsrvr.org https://*.cloudflare.com https://*.videodelivery.net https://*.cloudfl
+    arestream.com https://www.googletagmanager.com https://*.qualified.com https://td.doubleclick.net ht
+    tps://bid.g.doubleclick.net https://9309168.fls.doubleclick.net https://9973066.fls.doubleclick.net 
+    https://s.company-target.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestor
+    s 'none'; worker-src 'self' blob:; child-src 'self' blob:; upgrade-insecure-requests                
+    cross-origin-opener-policy: unsafe-none                                                             
+    cross-origin-resource-policy: cross-origin                                                          
+    permissions-policy: geolocation=(), camera=(), microphone=()                                        
+    referrer-policy: strict-origin-when-cross-origin                                                    
+    x-content-type-options: nosniff                                                                     
+    x-frame-options: SAMEORIGIN                                                                         
+    x-served-by: marketing-site                                                                         
+    x-xss-protection: 1; mode=block                                                                     
+    x-rm: GW                                                                                            
+    set-cookie: _ga=GA1.1.ba1f85ac-4496-4599-9622-828b7af17f09; Expires=Thu, 09 Dec 2027 16:26:18 GMT; P
+    ath=/                                                                                               
+    set-cookie: cfz_google-analytics_v4={"nzcr_ga4":{"v":"ba1f85ac-4496-4599-9622-828b7af17f09","e":1828
+    369578547}}; Expires=Thu Dec 09 2027 16:26:18 GMT+0000 (Coordinated Universal Time); HttpOnly; SameS
+    ite=Lax; Path=/; Secure                                                                             
+    set-cookie: cfz_adobe={"MsVJ_ecid":{"v":"CiY3NjQ1NjkxMDM4ODkxMTA0ODgxMTkzOTcyNDE4NjcwODczMTQ4MlIOCKO
+    Nh4mcNCoDVkE2MALwAaONh4mcNA==","e":1828369578729}}; Expires=Thu Dec 09 2027 16:26:18 GMT+0000 (Coord
+    inated Universal Time); HttpOnly; SameSite=Lax; Path=/; Secure                                      
+    set-cookie: kndctr_8AD56F28618A50850A495FB6_AdobeOrg_identity=CiY3NjQ1NjkxMDM4ODkxMTA0ODgxMTkzOTcyND
+    E4NjcwODczMTQ4MlIOCKONh4mcNCoDVkE2MALwAaONh4mcNA==; Expires=Thu, 09 Dec 2027 16:26:18 GMT; Path=/; S
+    ecure; SameSite=Lax                                                                                 
+    set-cookie: __cf_bm=KKYuBvSbPRjvKRB_ORvybbwwYaTxlSmC8uL1YHdBKlY-1794241578.5380225-1.0.1.1-UJdyF9jS2
+    i0Y1bOqo5_gan5hP_SLiVyCSbeAoI4eDdPZHb2U154RHpAwPpw4uCOhSQnZ1aSLHZxhB0taAOSIjn905H2EelROrhH1FCvGxkUQU
+    GsjhnrN2lNvx2QvyUtuADZ4qN8siuufbhQszGiHGA; HttpOnly; SameSite=None; Partitioned; Secure; Path=/; Dom
+    ain=www.cloudflare.com; Expires=Mon, 09 Nov 2026 16:56:18 GMT                                       
+    report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/repo
+    rt/v4?s=MgfgT74RGodSNBJtEkFUVq6k50toHfRBtapJN%2FLX44mxzlX9XmP8cscKoHRwH18W%2Fq9Cig9EQUvIugYRgSRrvdWh
+    8rz6E3E76JfNHL%2Ba3Sgw0rU4dxI2CbnHfDpVx9IrND54IFnCD27gGbTRM82grA%3D%3D"}]}                          
+    nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}                                 
+    server: cloudflare                                                                                  
+    cf-ray: a57e2da9dd083b3c-NRT                                                                        
+    alt-svc: h3=":443"; ma=86400         
+    \end{minted}
+  \end{termout}
+
+  \begin{termout}[H]
+    \caption{alt-svc ヘッダの探索結果}\label{out:f_altsvc}
+    \begin{minted}{zsh}
+    guest@host82:~$ curl -sI https://【候補のURL】 | grep -i alt-svc
+    % TODO: 実際の出力を貼る
+    \end{minted}
+  \end{termout}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.98\columnwidth]{fig/wireshark_f_h3.png}
+    \caption{HTTP/3(QUIC)のInitialパケットをWiresharkで読み取った結果}
+    \label{fig:ws_f_h3}
+  \end{figure}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.98\columnwidth]{fig/wireshark_f_h2.png}
+    \caption{HTTP/2のTCPハンドシェイクとTLSをWiresharkで読み取った結果}
+    \label{fig:ws_f_h2}
+  \end{figure}
+
+  HTTP/3では，出力\ref{out:f_h3}のとおり【要記入：ステータスラインと，HTTP/3で応答したことが分かる部分】．図\ref{fig:ws_f_h3}では，クライアントからサーバのUDP 443番ポートへ送られたInitialパケット(No.【要記入】，長さ【要記入】バイト)を展開した．Long Headerには，Version(【要記入】)，Destination Connection ID(【要記入】)，Source Connection ID(【要記入】)が含まれ，ペイロードのCRYPTOフレームにはTLSのClient Hello【要記入：SNI，ALPNのh3など】が入っている．つまりQUICでは，TLS 1.3のハンドシェイクがQUICのパケット内で運ばれ，TCPのような独立した接続確立の手順は存在しない．
+
+  HTTP/2では，図\ref{fig:ws_f_h2}のとおり，No.【要記入】のSYN，No.【要記入】のSYN/ACK，No.【要記入】のACKでTCPの3ウェイハンドシェイクを行ったのち，Client Hello(No.【要記入】)から始まるTLSのハンドシェイクが行われている．Client HelloのALPNには【要記入】が含まれていた．
+
+  両者を比べると，HTTP/2ではTCPの接続確立とTLSのハンドシェイクが別々に必要であるのに対し，HTTP/3ではQUICの最初のやり取りに暗号化の交渉が含まれる．実際にTCPのSYNから最初のHTTPリクエストまでに要した時間は【要記入】秒，QUICでは【要記入】秒であった．【時間差が出た／出なかった理由を一言】．
+
+  alt-svcヘッダの探索では，出力\ref{out:f_altsvc}のとおり，【候補のURL】のalt-svcに【h3=":443"など】が含まれており，HTTP/3に対応していることが分かった．alt-svcは，同じサイトが別のプロトコル(ここではHTTP/3)でも提供されていることをクライアントに伝えるヘッダである．
+\end{maintask}
