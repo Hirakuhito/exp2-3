@@ -1,0 +1,76 @@
+\begin{maintask}{3-2}
+  \subsection*{課題内容}
+  socketのgetaddrinfoで名前解決し，IPv4のみ対応のホストと両対応のホストで返るアドレスの違いを確認した．
+
+  \subsection*{実験方法}
+  \begin{enumerate}
+    \item ホスト名を書き換えて実行（3-1と同じ2つのホスト）
+      \begin{minted}{zsh}
+        sed -i "s/^q_hostname = .*/q_hostname = 'www.city.sapporo.jp'/" dns_socket_sample.py
+        ./dns_socket_sample.py
+        sed -i "s/^q_hostname = .*/q_hostname = 'www.pref.hokkaido.lg.jp'/" dns_socket_sample.py
+        ./dns_socket_sample.py
+      \end{minted}
+      出力に\texttt{AF\_INET}のみが並ぶか，\texttt{AF\_INET6}も並ぶかを比較した．
+  \end{enumerate}
+
+  \subsection*{結果}
+  2つのホストに対する実行結果を，出力\ref{out:gai_v4}，出力\ref{out:gai_v46}に示した．使用したプログラムのソースコードをリスト\ref{lst:gai}に示す．\texttt{q\_hostname}の行は，ホスト名ごとに\texttt{sed}で書き換えて使用した．
+
+  \begin{listing}[H]
+    \caption{dns\_socket\_sample.py のソースコード}\label{lst:gai}
+    \begin{minted}[fontsize=\small]{python}
+    #!/usr/bin/python3
+
+    import socket
+
+    q_hostname = 'www.pref.hokkaido.lg.jp'
+
+    print('Quering hostname:', q_hostname)
+
+    addrs = socket.getaddrinfo(q_hostname, 443)
+    for addr in addrs:
+        print(addr)
+    \end{minted}
+  \end{listing}
+
+  \begin{termout}[H]
+    \caption{dns\_socket\_sample.py(www.city.sapporo.jp) の実行結果}\label{out:gai_v4}
+    \begin{minted}{zsh}
+    guest@host82:~/dns$ ./dns_socket_sample.py
+    Quering hostname: www.city.sapporo.jp
+    (<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6,
+     '', ('45.60.112.77', 443))
+    (<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_DGRAM: 2>, 17,
+     '', ('45.60.112.77', 443))
+    (<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_RAW: 3>, 0,
+     '', ('45.60.112.77', 443))
+    \end{minted}
+  \end{termout}
+
+  \begin{termout}[H]
+    \caption{dns\_socket\_sample.py(www.pref.hokkaido.lg.jp) の実行結果}\label{out:gai_v46}
+    \begin{minted}{zsh}
+    guest@host82:~/dns$ ./dns_socket_sample.py
+    Quering hostname: www.pref.hokkaido.lg.jp
+    (<AddressFamily.AF_INET6: 10>, <SocketKind.SOCK_STREAM: 1>, 6,
+     '', ('2a02:e980:10e::4d', 443, 0, 0))
+    (<AddressFamily.AF_INET6: 10>, <SocketKind.SOCK_DGRAM: 2>, 17,
+     '', ('2a02:e980:10e::4d', 443, 0, 0))
+    (<AddressFamily.AF_INET6: 10>, <SocketKind.SOCK_RAW: 3>, 0,
+     '', ('2a02:e980:10e::4d', 443, 0, 0))
+    (<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_STREAM: 1>, 6,
+     '', ('45.60.112.77', 443))
+    (<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_DGRAM: 2>, 17,
+     '', ('45.60.112.77', 443))
+    (<AddressFamily.AF_INET: 2>, <SocketKind.SOCK_RAW: 3>, 0,
+     '', ('45.60.112.77', 443))
+    \end{minted}
+  \end{termout}
+
+  www.city.sapporo.jpでは，出力\ref{out:gai_v4}のとおり，返ってきたアドレスはすべて\texttt{AF\_INET}で，IPv4アドレス45.60.112.77(ポート443)だけが得られた．同じアドレスが3行並んでいるのは，ソケットの種類(\texttt{SOCK\_STREAM}，\texttt{SOCK\_DGRAM}，\texttt{SOCK\_RAW})ごとに1つずつ返されたためで，プロトコル番号はそれぞれ6(TCP)，17(UDP)，0である．これは3-1で，このホストのAAAAの応答にアドレスがなかったことと一致する．
+
+  www.pref.hokkaido.lg.jpでは，出力\ref{out:gai_v46}のとおり，\texttt{AF\_INET6}のアドレス2a02:e980:10e::4dと，\texttt{AF\_INET}のアドレス45.60.112.77の両方が返った．各アドレスがソケットの種類ごとに3行ずつ並ぶ点は同じで，合計6行であった．また，\texttt{AF\_INET6}が先に並び，\texttt{AF\_INET}が後に続いた．getaddrinfoはRFC 6724に基づいて宛先アドレスを並べ替えるため，IPv6の優先度がIPv4より高く，IPv6が先頭になったと考えられる．実際，課題Eのwgetでも，www.pref.hokkaido.lg.jpへの接続にはIPv6が使われており，この順序と一致する．
+
+  以上より，getaddrinfoは，DNSのAとAAAAの結果をまとめて返し，呼び出し側はそのアドレスファミリを見て接続先を選べる．ホストがIPv6に対応しているかどうかは，返るアドレスの種類で判断できる．
+\end{maintask}

@@ -32,7 +32,87 @@
   出力\ref{out:tcpdump_31_v46}，
   出力\ref{out:dnspy_v4}，
   出力\ref{out:dnspy_v46}
-  に示した．
+  に示した．使用したプログラムのソースコードをリスト\ref{lst:dnspython}に示す．\texttt{q\_hostname}の行は，ホスト名ごとに\texttt{sed}で書き換えて使用した．
+
+  \begin{listing}[H]
+    \caption{dnspython\_sample.py のソースコード}\label{lst:dnspython}
+    \begin{minted}[fontsize=\small]{python}
+    #!/usr/bin/python3
+
+    import dns.resolver
+
+    #q_hostname='google.co.jp'
+    q_hostname='www.city.sapporo.jp'
+    #q_hostname='www.yomiuri.co.jp'
+
+    print('Querying hostname:', q_hostname)
+
+    # DNS問い合わせ方式の選択
+    # 'normal' : 通常DNS（Do53、OSのデフォルトリゾルバ）
+    # 'doh'    : DNS over HTTPS
+    # 'dot'    : DNS over TLS
+
+    mode = 'normal'
+
+    if mode == 'doh':
+        # Cloudflare Public DoH Resolver
+        resolver = dns.resolver.Resolver(configure=False)
+        resolver.nameservers = [
+            dns.nameserver.DoHNameserver(
+                'https://cloudflare-dns.com/dns-query',
+                bootstrap_address='1.1.1.1'
+            )
+        ]
+
+    elif mode == 'dot':
+        # Cloudflare Public DoT Resolver
+        resolver = dns.resolver.Resolver(configure=False)
+        resolver.nameservers = [
+            dns.nameserver.DoTNameserver(
+                '1.1.1.1',
+                port=853,
+                hostname='one.one.one.one',
+                verify=True
+            )
+        ]
+
+    elif mode == 'normal':
+        # /etc/resolv.conf のデフォルトリゾルバ
+        resolver = dns.resolver.Resolver()
+
+    else:
+        raise ValueError('Unknown DNS mode: ' + mode)
+
+    resolver.timeout = 5
+    resolver.lifetime = 15
+
+    try:
+      answer1 = resolver.resolve(q_hostname, 'A')
+      print('A records are:')
+      for rr in answer1:
+        print(' ', rr)
+      print(f"  Replied nameserver: {answer1.nameserver} ({answer1.port})")
+    except dns.resolver.NoAnswer:
+        print("A records: No answer from the resolver.")
+    except dns.resolver.NXDOMAIN:
+        print("A records: No such domain.")
+    except dns.resolver.Timeout:
+        print("A records: Timer is expired.")
+
+    try:
+      answer2 = resolver.resolve(q_hostname, 'AAAA')
+      print('AAAA records are:')
+      for rr in answer2:
+        print(' ', rr)
+      print(f"  Replied nameserver: {answer2.nameserver} ({answer2.port})")
+    except dns.resolver.NoAnswer:
+        print("AAAA records: No answer from the resolver.")
+    except dns.resolver.NXDOMAIN:
+        print("AAAA records: No such domain.")
+    except dns.resolver.Timeout:
+        print("AAAA records: Timer is expired.")
+    \end{minted}
+  \end{listing}
 
   \begin{termout}[H]
     \caption{tcpdump(IPv4のみのホスト) の実行結果}\label{out:tcpdump_31_v4}
