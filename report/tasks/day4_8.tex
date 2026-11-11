@@ -1,0 +1,24 @@
+\begin{maintask}{4-8}
+  \subsection*{課題内容}
+  \texttt{tcp\_server\_fork.py}の実行中に\texttt{ps}コマンドでプロセス一覧を確認し，クライアント接続時にプロセス数が増えることを確かめる．
+
+  \subsection*{実験方法}
+  \begin{enumerate}
+    \item IPv6対応に変更した\texttt{tcp\_server\_fork.py}を起動し，クライアントから接続する．
+    \item クライアントとの通信後，別端末から\texttt{ps}を実行してサーバの親子プロセスを確認する．
+  \end{enumerate}
+
+  \subsection*{結果}
+  クライアントとの通信後に実行した\texttt{ps}の出力を出力\ref{out:ps_after}に示す．
+  \begin{termout}[H]
+    \caption{クライアント接続後のプロセス一覧}\label{out:ps_after}
+    \begin{minted}{text}
+    guest@host82:~/socket$ ps -ef | grep tcp_server_fork.py
+    guest       1746    1676  0 01:16 pts/0    00:00:00 /usr/bin/python3 ./tcp_server_fork.py
+    guest       1748    1746  0 01:16 pts/0    00:00:00 /usr/bin/python3 ./tcp_server_fork.py
+    guest       1750    1703  0 01:24 pts/1    00:00:00 grep --color=auto tcp_server_fork.py
+    \end{minted}
+  \end{termout}
+
+  クライアント接続後のプロセス一覧では，PID 1746のサーバプロセスに加えて，その子プロセスPID 1748が確認できた．子プロセスのPPIDは1746であり，クライアント接続を処理するためにforkで子プロセスが生成されたことが分かる．接続前の一覧は記録していないため，ここでは接続後の親子関係を示した．
+\end{maintask}

@@ -1,0 +1,204 @@
+\begin{maintask}{4-7}
+  \subsection*{課題内容}
+  IPv6対応の3種類のTCPサーバ（select，fork，multithreading）を起動し，IPv6対応クライアントから接続できることを確認する．
+
+  \subsection*{実験方法}
+  \begin{enumerate}
+    \item 各サーバプログラムを\texttt{~/socket}で順番に起動する．
+    \item クライアントをIPv6対応にし，サーバのIPv6アドレスに接続してメッセージを送信する．
+    \item サーバごとにクライアントとサーバ両方の出力を記録し，次のサーバを試す前に停止する．
+  \end{enumerate}
+
+  \subsection*{結果}
+  各サーバに対するクライアント・サーバの実行結果を出力\ref{out:select_server}〜出力\ref{out:thread_client}に示す．使用したソースコードをリスト\ref{lst:select_server}〜リスト\ref{lst:ipv6_client}に示す．
+
+  \begin{listing}[H]
+    \caption{IPv6対応tcp\_server\_select.py}\label{lst:select_server}
+    \begin{minted}[fontsize=\small]{python}
+    #!/usr/bin/python3
+
+    from datetime import datetime
+    import socket
+    import select
+    import sys
+
+    HOSTNAME = ''
+    PORT_NUM = 6789
+    MAX_SIZE = 1024
+
+    print('The server started at', datetime.now())
+    print('Waiting...')
+
+    def accept_loop(server_sock):
+      fds = [server_sock]
+      while True:
+        r, _, _ = select.select(fds, [], [])
+        for sock in r:
+          if sock == server_sock:
+            new_sock, addr = sock.accept()
+            fds.append(new_sock)
+          else:
+            data = sock.recv(MAX_SIZE)
+            if not data:
+              break
+            print('Received text:', data.decode('utf-8'), 'from', addr)
+            sock.sendall(data)
+            sock.close()
+            fds.remove(sock)
+
+    if __name__ == '__main__':
+      server = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+      #server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      server.bind((HOSTNAME, PORT_NUM))
+      server.listen()
+      try:
+        accept_loop(server)
+      except KeyboardInterrupt:
+        server.close()
+    \end{minted}
+  \end{listing}
+  \begin{listing}[H]
+    \caption{IPv6対応tcp\_server\_fork.py}\label{lst:fork_server}
+    \begin{minted}[fontsize=\small]{python}
+    #!/usr/bin/python3
+
+    from datetime import datetime
+    import socket
+    import os
+
+    HOSTNAME = ''
+    PORT_NUM = 6789
+    MAX_SIZE = 1024
+
+    print('The server started at', datetime.now())
+    print('Waiting...')
+
+    #with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+    with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as server:
+      server.bind((HOSTNAME, PORT_NUM))
+      server.listen()
+      try:
+        while True:
+          client, addr = server.accept()
+          child_pid = os.fork()
+          if child_pid == 0:
+            data = client.recv(MAX_SIZE)
+            if data:
+              print('Received text:', data.decode('utf-8'), 'from', addr)
+              client.sendall(data)
+              client.close()
+      except KeyboardInterrupt:
+        pass
+    \end{minted}
+  \end{listing}
+  \begin{listing}[H]
+    \caption{IPv6対応tcp\_server\_multithreading.py}\label{lst:thread_server}
+    \begin{minted}[fontsize=\small]{python}
+    #!/usr/bin/python3
+
+    from datetime import datetime
+    import socket
+    import threading
+
+    alive = True
+    observe_thread = None
+    HOSTNAME = ''
+    PORT_NUM = 6789
+    MAX_SIZE = 1024
+
+    print('The server started at', datetime.now())
+    print('Waiting...')
+
+    def client_handler(client, addr):
+      data = client.recv(MAX_SIZE)
+      if data:
+        print('Received text:', data.decode('utf-8'), 'from', addr)
+        client.sendall(data)
+        client.close()
+
+    if __name__ == '__main__':
+      #with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+      with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as server:
+        server.bind((HOSTNAME, PORT_NUM))
+        server.listen()
+        try:
+          while True:
+            client, addr = server.accept()
+            thread = threading.Thread(target = client_handler, args = (client, addr))
+            thread.start()
+            while thread.is_alive():
+              thread.join()
+        except KeyboardInterrupt:
+          alive = False
+          pass
+    \end{minted}
+  \end{listing}
+  \begin{listing}[H]
+    \caption{IPv6対応tcp\_client.py}\label{lst:ipv6_client}
+    \begin{minted}[fontsize=\small]{python}
+    #!/usr/bin/python3
+
+    from datetime import datetime
+    import socket
+
+    HOSTNAME = '::1'
+    #HOSTNAME = '172.28.0.200'
+    PORT_NUM = 6789
+    MAX_SIZE= 1024
+
+    print('The client started at', datetime.now())
+
+    #with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+    with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as server:
+        server.connect((HOSTNAME, PORT_NUM))
+        print("Input text: ", end='')
+        msg = input()
+        server.sendall(msg.encode('utf-8'))
+        data = server.recv(MAX_SIZE)
+        print('Echo back text:', data.decode('utf-8'))
+        server.close()
+    \end{minted}
+  \end{listing}
+
+  \begin{termout}[H]
+    \caption{selectサーバの実行結果}\label{out:select_server}
+    \begin{minted}{text}
+    guest@host82:~/socket$ ./tcp_server_select.py
+    The server started at 2026-11-12 01:11:10.323441
+    Waiting...
+    Received text: How are you doing. from ('::1', 41992, 0, 0)
+    guest@host82:~/socket$ ./tcp_client.py
+    The client started at 2026-11-12 01:11:31.124926
+    Input text: How are you doing.
+    Echo back text: How are you doing.
+    \end{minted}
+  \end{termout}
+  \begin{termout}[H]
+    \caption{forkサーバの実行結果}\label{out:fork_server}
+    \begin{minted}{text}
+    guest@host82:~/socket$ ./tcp_server_fork.py
+    The server started at 2026-11-12 01:16:08.792394
+    Waiting...
+    Received text: Text. from ('::1', 39216, 0, 0)
+    guest@host82:~/socket$ ./tcp_client.py
+    The client started at 2026-11-12 01:16:30.536484
+    Input text: Text.
+    Echo back text: Text.
+    \end{minted}
+  \end{termout}
+  \begin{termout}[H]
+    \caption{multithreadingサーバの実行結果}\label{out:thread_client}
+    \begin{minted}{text}
+    guest@host82:~/socket$ ./tcp_server_multithreading.py
+    The server started at 2026-11-12 01:25:56.407150
+    Waiting...
+    Received text: Test message. from ('::1', 43042, 0, 0)
+    guest@host82:~/socket$ ./tcp_client.py
+    The client started at 2026-11-12 01:26:39.304585
+    Input text: Test message.
+    Echo back text: Test message.
+    \end{minted}
+  \end{termout}
+
+  IPv6ループバック\texttt{::1}を用いて3種類のサーバに接続した．selectサーバでは\texttt{How are you doing.}，forkサーバでは\texttt{Text.}，multithreadingサーバでは\texttt{Test message.}を送信し，それぞれ同じ文字列がクライアントに返り，サーバ側にも接続元\texttt{::1}と受信文字列が表示された．
+\end{maintask}

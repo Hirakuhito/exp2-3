@@ -1,0 +1,54 @@
+\begin{maintask}{4-1}
+  \subsection*{課題内容}
+  UDPサーバ\texttt{udp\_server.py}とUDPクライアント\texttt{udp\_client.py}を実行し，クライアントから送信したデータをサーバが受信することを確認する．
+
+  \subsection*{実験方法}
+  \begin{enumerate}
+    \item サンプルをホームディレクトリにコピーし，サーバを起動する．
+      \begin{minted}{zsh}
+        cd
+        cp -r /shares/socket .
+        cd socket
+        ./udp_server.py
+      \end{minted}
+    \item 別の演習環境からクライアントを起動する．
+      \begin{minted}{zsh}
+        cd socket
+        ./udp_client.py
+      \end{minted}
+    \item サーバ側とクライアント側の出力を確認し，サーバをCtrl-Cで停止する．
+  \end{enumerate}
+
+  \subsection*{結果}
+  サーバ側とクライアント側の実行結果を出力\ref{out:udp_server}，出力\ref{out:udp_client}に示す．
+  使用したソースコードをリスト\ref{lst:udp_server}，リスト\ref{lst:udp_client}に示す．
+  \begin{listing}[H]
+    \caption{udp\_server.py のソースコード}\label{lst:udp_server}
+    \inputminted[fontsize=\small]{python}{src/day4/udp_server.py}
+  \end{listing}
+  \begin{listing}[H]
+    \caption{udp\_client.py のソースコード}\label{lst:udp_client}
+    \inputminted[fontsize=\small]{python}{src/day4/udp_client.py}
+  \end{listing}
+ 
+  \begin{termout}[H]
+    \caption{udp\_server.py の実行結果}\label{out:udp_server}
+    \begin{minted}{text}
+    guest@host82:~/socket$ ./udp_server.py
+    Starting the server at 2026-11-12 00:27:30.085333     
+    Waiting for a client to call.                         
+    At 2026-11-12 00:28:28.445504 ('127.0.0.1', 40714) said, Hey!  
+    \end{minted}
+  \end{termout}
+  \begin{termout}[H]
+    \caption{udp\_client.py の実行結果}\label{out:udp_client}
+    \begin{minted}{text}
+    guest@host82:~$ cd ~/socket
+    guest@host82:~/socket$ ./udp_client.py                                                                        
+    Staring the client at 2026-11-12 00:28:28.445191                                                              
+    At 2026-11-12 00:28:28.445576 ('127.0.0.1', 6789) said, Are you talking to me?    
+    \end{minted}
+  \end{termout}
+
+  クライアントが送信した\texttt{Hey!}をサーバが受信し，サーバからの応答\texttt{Are you talking to me?}をクライアントが受信した．UDPによる要求と応答が正常に行われた．
+\end{maintask}

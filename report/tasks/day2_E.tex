@@ -146,34 +146,34 @@
   \end{minted}
   \end{termout}
 
-  \begin{figure}[h]
+  \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.98\columnwidth]{fig/wireshark_e_sapporo.png}
     \caption{www.city.sapporo.jpへのアクセスをWiresharkで読み取った結果}
     \label{fig:ws_e_sapporo}
   \end{figure}
 
-  \begin{figure}[h]
+  \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.98\columnwidth]{fig/wireshark_e_hokkaido.png}
     \caption{www.pref.hokkaido.lg.jpへのアクセスをWiresharkで読み取った結果}
     \label{fig:ws_e_hokkaido}
   \end{figure}
 
-  \begin{figure}[h]
+  \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.98\columnwidth]{fig/wireshark_e_keio.png}
     \caption{www.keio.ac.jpへのアクセスをWiresharkで読み取った結果}
     \label{fig:ws_e_keio}
   \end{figure}
 
-  学外への通信は，まずデフォルトゲートウェイのMACアドレスを解決することから始まる．出力\ref{out:route_e}の経路表では，デフォルトゲートウェイはIPv4が【要記入】，IPv6が【要記入】であり，近隣キャッシュには両者のMACアドレス【要記入】がすでに登録されていた．そのため，図\ref{fig:ws_e_sapporo}〜図\ref{fig:ws_e_keio}では【ARP/NDのパケットが現れなかった／現れた】．【現れなかった場合：キャッシュの内容(出力\ref{out:route_e})から，ゲートウェイのMACアドレスは既知であったと言える．】
+    経路表では，デフォルトゲートウェイはIPv4が172.28.0.1，IPv6が2001:2f8:40:11da::1であり，実行前の近隣キャッシュにはどちらもMACアドレス\texttt{a2:1e:33:b9:98:ef}が登録されていた．そのため，クライアントがゲートウェイのMACアドレスを新たに問い合わせるARPやNDは確認されなかった．図\ref{fig:ws_e_sapporo}では，No.83のEthernet IIヘッダに，学外の宛先へ送るフレームの宛先MACアドレスとしてゲートウェイのMACアドレスが表示されている．
 
-  www.city.sapporo.jpでは，図\ref{fig:ws_e_sapporo}のNo.【要記入】で名前解決のためAレコードの問い合わせがDNSリゾルバ【要記入】に送られ，No.【要記入】の応答でアドレス【要記入】が得られた．AAAAレコードの問い合わせ(No.【要記入】)に対する応答は【アドレスなし】であり，このサイトはIPv4のみに対応していることが分かる．続いて，TCPの接続後にHTTPのGETがポート80に送られ，No.【要記入】のレスポンスは【要記入：301などのステータスコードとLocation】であった．【HTTPSへ転送されている場合：その後ポート443へ接続し，TLSハンドシェイク(Client Hello，Server Hello，Certificate等)ののちHTTPSでコンテンツが取得された．】
+  www.city.sapporo.jpでは，No.77でAレコード，No.78でAAAAレコードがDNSリゾルバ133.87.1.11に問い合わせられた．No.79の応答では，CNAME\texttt{i4tz2oz.impervadns.net}を経由してIPv4アドレス45.60.112.77が返された．No.80のAAAA応答にはIPv6アドレスがなく，CNAMEとSOAが返されたため，このキャプチャではIPv4のみで接続可能であることが分かる．No.84でHTTP GETが送られ，No.88では301 Moved PermanentlyとLocationヘッダによってHTTPSへ転送された．その後，ポート443でTLSのハンドシェイクが行われ，HTTPSでコンテンツを取得した．
 
-  www.pref.hokkaido.lg.jpは，図\ref{fig:ws_e_hokkaido}のとおりAとAAAAの双方に応答があり，IPv4/IPv6の両方に対応している．wgetが実際に使用したのは【IPv4／IPv6】で，その理由は【要記入】と考えられる．HTTPおよびHTTPSの手順は【要記入】．
+  www.pref.hokkaido.lg.jpでは，No.49とNo.50でAおよびAAAAレコードが問い合わせられ，No.51とNo.52の応答でIPv4アドレス45.60.112.77とIPv6アドレス2a02:e980:10e::4dが返された．TCP SYNの宛先はIPv6アドレスであり，wgetはIPv6を使って接続した．No.58でHTTP GETが送られ，No.64で302 FoundとLocationヘッダによってHTTPSへ転送された後，TLSのハンドシェイクを経てHTTPSでコンテンツを取得した．
 
-  www.keio.ac.jpについては，図\ref{fig:ws_e_keio}で【要記入：問い合わせるレコード，使用したIPバージョン，HTTP/HTTPSの手順】．
+  www.keio.ac.jpでは，No.33とNo.34でAおよびAAAAレコードが問い合わせられ，No.35とNo.36の応答でIPv4と複数のIPv6アドレスが返された．TCP SYNの宛先はIPv6アドレス2600:9000:2142:5800:9:dcf4:5ec0:93a1であり，wgetはIPv6を使って接続した．No.41でHTTP GETが送られ，No.44で301 Moved PermanentlyによりHTTPSへ転送された．さらに，wgetの出力ではHTTPS接続後に/ja/へ転送され，最終的に200 OKの応答を得ている．
 
-  以上より，【3サイトの違い（IPバージョン，リダイレクトの有無，TLSのバージョンなど）を2〜3文でまとめる】．
+  以上より，札幌市のサイトではAAAAレコードが返らず，IPv4で接続していたのに対し，北海道庁と慶應義塾大学のサイトではAとAAAAの両方が返り，wgetはIPv6で接続していた．3サイトともHTTPからHTTPSへのリダイレクトがあり，サーバから返されるステータスコードや，追加のリダイレクト先には違いが見られた．
 \end{maintask}

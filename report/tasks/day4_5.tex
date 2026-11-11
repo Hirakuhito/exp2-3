@@ -1,0 +1,57 @@
+\begin{maintask}{4-5}
+  \subsection*{課題内容}
+  \texttt{tcp\_client.py}の接続先を172.28.0.200，サービスをecho (TCPポート7)に変更し，送信した文字列が返ることを確認する．
+
+  \subsection*{実験方法}
+  \begin{enumerate}
+    \item \texttt{tcp\_client.py}の接続先を172.28.0.200，ポートをecho (7/tcp)に変更する．
+    \item プログラムを実行し，入力文字列とエコーされた文字列を記録する．
+  \end{enumerate}
+
+  \subsection*{結果}
+  実行に用いた\texttt{tcp\_client.py}のソースコードをリスト\ref{lst:tcp_echo_client}に，実行結果を出力\ref{out:tcp_echo_client}に示す．
+  \begin{listing}[H]
+    \caption{echoサーバ向けtcp\_client.py のソースコード}\label{lst:tcp_echo_client}
+    \begin{minted}[fontsize=\small]{python}
+    #!/usr/bin/python3
+
+    from datetime import datetime
+    import socket
+                                                                                                                  
+                                                                                                                  
+    #HOSTNAME = '::1'
+    HOSTNAME = '172.28.0.200'
+    PORT_NUM = 7
+                                                                                                                  
+    MAX_SIZE= 1024
+                                                                                                                  
+    print('The client started at', datetime.now())
+                                                                                                                  
+                                                                                                                  
+    # 1. socketの作成
+    # IPv4 の場合は AF_INETの行を有効化し、v6の場合はAF_INET6の行を有効化する
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+    #with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as server:
+    # 2. ソケットのサーバへの接続 (connect)
+    server.connect((HOSTNAME, PORT_NUM))                                                                      
+    print("Input text: ", end='')
+    msg = input()
+    # 3. メッセージの送受信 (sendall, recv)
+    server.sendall(msg.encode('utf-8'))
+    data = server.recv(MAX_SIZE)                                                                              
+    print('Echo back text:', data.decode('utf-8'))
+    server.close()          
+    \end{minted}
+  \end{listing}
+  \begin{termout}[H]
+    \caption{echoサーバとの通信結果}\label{out:tcp_echo_client}
+    \begin{minted}{text}
+    guest@host82:~/socket$ ./tcp_client.py
+    The client started at 2026-11-12 00:59:51.087378
+    Input text: Hello World.
+    Echo back text: Hello World.
+    \end{minted}
+  \end{termout}
+
+  接続先を\texttt{172.28.0.200:7}に設定し，\texttt{Hello World.}を送信したところ，同じ文字列が返された．
+\end{maintask}

@@ -1,0 +1,59 @@
+\begin{maintask}{4-6}
+
+  \subsection*{課題内容}
+  \texttt{tcp\_client.py}の接続先を172.28.0.200のTCPポート6789に変更し，サーバが混雑しているときにすぐ返事が返らないことを確認する．
+
+  \subsection*{実験方法}
+  \begin{enumerate}
+    \item 接続先を172.28.0.200，ポートを6789に変更した\texttt{tcp\_client.py}を実行する．
+    \item 応答が返るまでの様子を記録し，演習環境の指示に従って終了する．
+  \end{enumerate}
+
+  \subsection*{結果}
+  使用したソースコードをリスト\ref{lst:tcp_busy_client}に，実行結果を出力\ref{out:tcp_busy_client}に示す．
+  \begin{listing}[H]
+    \caption{混雑時の確認に用いたtcp\_client.py}\label{lst:tcp_busy_client}
+    \begin{minted}[fontsize=\small]{python}
+    #!/usr/bin/python3
+
+    from datetime import datetime
+    import socket
+                                                                                                              
+                                                                                                              
+    #HOSTNAME = '::1'
+    HOSTNAME = '172.28.0.200'
+    PORT_NUM = 6789
+                                                                                                              
+    MAX_SIZE= 1024
+                                                                                                              
+    print('The client started at', datetime.now())
+                                                                                                              
+                                                                                                              
+    # 1. socketの作成
+    # IPv4 の場合は AF_INETの行を有効化し、v6の場合はAF_INET6の行を有効化する
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+    #with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as server:
+    # 2. ソケットのサーバへの接続 (connect)
+    server.connect((HOSTNAME, PORT_NUM))                                                                      
+    print("Input text: ", end='')
+    msg = input()
+    # 3. メッセージの送受信 (sendall, recv)
+    server.sendall(msg.encode('utf-8'))
+    data = server.recv(MAX_SIZE)                                                                              
+    print('Echo back text:', data.decode('utf-8'))
+    server.close()                                                                                            
+                          
+    \end{minted}
+  \end{listing}
+  \begin{termout}[H]
+    \caption{TCPポート6789への接続結果}\label{out:tcp_busy_client}
+    \begin{minted}{text}
+    guest@host82:~/socket$ ./tcp_client.py                                                                        
+    The client started at 2026-11-12 01:04:07.031393                                                              
+    Input text: Hello message.                                                                                    
+    Echo back text: Hello message.     
+    \end{minted}
+  \end{termout}
+
+  接続先\texttt{172.28.0.200:6789}に\texttt{Hello message.}を送信し，\texttt{Hello message.}が返ることを確認した．記録された出力には応答までの待ち時間が含まれていないため，応答遅延の程度はこのログからは評価できない．
+\end{maintask}

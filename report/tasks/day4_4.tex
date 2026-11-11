@@ -1,0 +1,68 @@
+\begin{maintask}{4-4}
+  \subsection*{課題内容}
+  TCPサーバ\texttt{tcp\_server.py}とTCPクライアント\texttt{tcp\_client.py}を実行し，クライアントから送信した文字列をサーバが受信することを確認する．
+
+  \subsection*{実験方法}
+  \begin{enumerate}
+    \item サンプルをコピーした\texttt{~/socket}で，サーバの接続先をsshdのIPv4またはIPv6アドレスに設定して起動する．
+      \begin{minted}{zsh}
+        cd ~/socket
+        ./tcp_server.py
+      \end{minted}
+    \item 別の演習環境で\texttt{tcp\_client.py}を実行し，メッセージを送る．
+      \begin{minted}{zsh}
+        cd ~/socket
+        ./tcp_client.py
+      \end{minted}
+    \item サーバ側で受信した文字列と接続元を確認し，サーバをCtrl-Cで停止する．
+  \end{enumerate}
+
+  \subsection*{結果}
+  サーバ側・クライアント側の実行結果を出力\ref{out:tcp_server}，出力\ref{out:tcp_client}に示す．
+  使用したサーバのソースコードをリスト\ref{lst:tcp_server_44}に示す．
+  \begin{listing}[H]
+    \caption{tcp\_server.py のソースコード}\label{lst:tcp_server_44}
+    \inputminted[fontsize=\small]{python}{src/day4/tcp_server.py}
+  \end{listing}
+  \begin{listing}[H]
+    \caption{4-4で使用したIPv4版tcp\_client.py}\label{lst:tcp_client_44}
+    \begin{minted}[fontsize=\small]{python}
+    #!/usr/bin/python3
+    from datetime import datetime
+    import socket
+
+    HOSTNAME = '127.0.0.1'
+    PORT_NUM = 6789
+    MAX_SIZE = 1024
+
+    print('The client started at', datetime.now())
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+        server.connect((HOSTNAME, PORT_NUM))
+        print("Input text: ", end='')
+        msg = input()
+        server.sendall(msg.encode('utf-8'))
+        data = server.recv(MAX_SIZE)
+        print('Echo back text:', data.decode('utf-8'))
+    \end{minted}
+  \end{listing}
+  \begin{termout}[H]
+    \caption{tcp\_server.py の実行結果}\label{out:tcp_server}
+    \begin{minted}{text}
+    guest@host82:~/socket$ ./tcp_server.py
+    The server started at 2026-11-12 00:40:38.153942
+    Waiting...
+    Received text: Test message. from  ('127.0.0.1', 55982)
+    \end{minted}
+  \end{termout}
+  \begin{termout}[H]
+    \caption{tcp\_client.py の実行結果}\label{out:tcp_client}
+    \begin{minted}{text}
+    guest@host82:~/socket$ ./tcp_client.py                                                                        
+    The client started at 2026-11-12 00:42:33.305380                                                              
+    Input text: Test message.                                                                                     
+    Echo back text: Test message.   
+    \end{minted}
+  \end{termout}
+
+  クライアントが送信した\texttt{Test message.}をサーバが受信し，同じ文字列がクライアントにも返された．
+\end{maintask}

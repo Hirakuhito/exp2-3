@@ -79,23 +79,23 @@
     \end{minted}
   \end{termout}
 
-  \begin{figure}[h]
+  \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.98\columnwidth]{fig/wireshark_d_fwd.png}
     \caption{順方向のUDP通信をWiresharkで読み取った結果}
     \label{fig:ws_d_fwd}
   \end{figure}
 
-  \begin{figure}[h]
+  \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.98\columnwidth]{fig/wireshark_d_rev.png}
     \caption{逆方向のUDP通信をWiresharkで読み取った結果}
     \label{fig:ws_d_rev}
   \end{figure}
 
-  順方向では，出力\ref{out:iperf_fwd}のとおり，指定した10 kbit/sに対し実測のBitrateは【要記入】であり，【要記入】個のデータグラムを送信して損失は【要記入】であった．図\ref{fig:ws_d_fwd}では，No.【要記入】でクライアント(2001:2f8:40:11da::182)からサーバ(2001:2f8:40:11da::200)のUDP 5201番ポートへ短いデータグラム(【要記入】バイト)が送られ，No.【要記入】でサーバから応答が返っており，これが接続手続きに相当する．その後，No.【要記入】〜【要記入】でデータを含むUDPパケット(ペイロード長【要記入】バイト)が約【要記入】秒間隔で送られている．ペイロード長を$L$バイトとすると，10 kbit/sを保つための送信間隔は$8L/10000$秒であり，$L=$【要記入】のとき【要記入】秒となって観測値と【一致する／しない】．
+    順方向では，出力\ref{out:iperf_fwd}のとおり，指定した10 kbit/sに対し，送信側の実測Bitrateは11.4 kbit/sであった．5個のデータグラムが送信され，損失は0個であった．図\ref{fig:ws_d_fwd}では，No.402でクライアント(2001:2f8:40:11da::182)からサーバ(2001:2f8:40:11da::200)へUDP 5201番ポートの接続手続き用パケットが送られ，No.403でサーバから応答が返っている．続いて，No.407，414，417，420，423でデータグラムが送られている．各パケットのUDPペイロード長は1428バイトであり，送信間隔は約1.142秒であった．$L=1428$バイトとすると，指定した10 kbit/sから計算される送信間隔は$8L/10000=1.1424$秒となり，観測値とほぼ一致する．
 
-  逆方向(-R)では，データを送る側がサーバになる．図\ref{fig:ws_d_rev}では，接続手続きののち，サーバ(::200)からクライアント(::182)へデータを含むUDPパケットが送られており，パケットの向きが順方向と入れ替わっている．出力\ref{out:iperf_rev}のBitrateは【要記入】，損失は【要記入】であった．
+  逆方向(-R)では，出力\ref{out:iperf_rev}のとおり，受信側のBitrateは11.4 kbit/sであり，5個のデータグラムの損失は0個であった．図\ref{fig:ws_d_rev}では，No.473，474で接続手続きが行われた後，No.475，487，490，495，498でサーバ(2001:2f8:40:11da::200)からクライアント(2001:2f8:40:11da::182)へデータグラムが送られている．順方向とはデータグラムの送信方向が逆になっていることが確認できた．
 
-  なお，フィルタ\texttt{udp.port == 5201}には，iperf3の制御に使われるTCPの接続は含まれない．【要記入：TCP 5201の制御接続を見て気づいたことがあれば】
+  なお，表示フィルタ\texttt{udp.port == 5201}では，iperf3の制御に使われるTCP接続は表示されない．このため，図\ref{fig:ws_d_fwd}および図\ref{fig:ws_d_rev}では，UDPによる接続手続きとデータグラムの流れを確認した．
 \end{maintask}
