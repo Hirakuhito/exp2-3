@@ -1,0 +1,104 @@
+\begin{maintask}{3-1}
+  \subsection*{課題内容}
+  PythonのDNSリゾルバ(dnspython)で，IPv4のみ対応のホストとIPv4/IPv6両対応のホストのA・AAAAレコードを引き，その通信を分析した．
+
+  \subsection*{実験方法}
+  \begin{enumerate}
+    \item ひな型を自分のホームにコピー
+      \begin{minted}{zsh}
+        cd; cp -r /shares/dns .; chmod -R u+w dns; cd dns
+      \end{minted}
+
+    \item ホスト名ごとに，キャプチャ開始，q\_hostnameの書き換え，実行，キャプチャ停止を行う
+      \begin{minted}{zsh}
+        (IPv4のみ)  tcpdump -i eth1 -s 0 -w day3_1_v4.pcap 'not port 4200'    (1つ目のターミナル)
+                    sed -i "s/^q_hostname=.*/q_hostname='www.city.sapporo.jp'/" dnspython_sample.py
+                    ./dnspython_sample.py
+        (両対応)    tcpdump -i eth1 -s 0 -w day3_1_v46.pcap 'not port 4200'   (1つ目のターミナル)
+                    sed -i "s/^q_hostname=.*/q_hostname='www.pref.hokkaido.lg.jp'/" dnspython_sample.py
+                    ./dnspython_sample.py
+      \end{minted}
+
+    \item 各pcapをWiresharkで開き，フィルタ\texttt{udp.port == 53}を適用
+  \end{enumerate}
+
+  \subsection*{結果}
+  tcpdumpの実行結果と，dnspython\_sample.pyの実行結果を
+  出力\ref{out:tcpdump_31_v4}，
+  出力\ref{out:tcpdump_31_v46}，
+  出力\ref{out:dnspy_v4}，
+  出力\ref{out:dnspy_v46}
+  に示した．
+
+  \begin{termout}[H]
+    \caption{tcpdump(IPv4のみのホスト) の実行結果}\label{out:tcpdump_31_v4}
+    \begin{minted}{zsh}
+    guest@host82:~/dns$ tcpdump -i eth1 -s 0 -w day3_1_v4.pcap 'not port 4200'                                              
+    tcpdump: listening on eth1, link-type EN10MB (Ethernet), cap
+    ture size 262144 bytes                                      
+    ^C58 packets captured                                       
+    60 packets received by filter                               
+    0 packets dropped by kernel
+    \end{minted}
+  \end{termout}
+
+  \begin{termout}[H]
+    \caption{tcpdump(両対応のホスト) の実行結果}\label{out:tcpdump_31_v46}
+    \begin{minted}{zsh}
+    guest@host82:~/dns$ tcpdump -i eth1 -s 0 -w day3_1_v46.pcap 'not port 4200' 
+    tcpdump: listening on eth1, link-type EN10MB (Ethernet), cap
+    ture size 262144 bytes                                      
+    ^C22 packets captured                                       
+    24 packets received by filter                               
+    0 packets dropped by kernel
+    \end{minted}
+  \end{termout}
+
+  \begin{termout}[H]
+    \caption{dnspython\_sample.py(www.city.sapporo.jp) の実行結果}\label{out:dnspy_v4}
+    \begin{minted}{zsh}
+    guest@host82:~/dns$ ./dnspython_sample.py  
+    \end{minted}
+  \end{termout}
+
+  \begin{termout}[H]
+    \caption{dnspython\_sample.py(www.pref.hokkaido.lg.jp) の実行結果}\label{out:dnspy_v46}
+    \begin{minted}{zsh}
+    guest@host82:~/dns$ ./dnspython_sample.py
+    \end{minted}
+  \end{termout}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.98\columnwidth]{fig/wireshark_31_v4_query.png}
+    \caption{IPv4のみのホストのA・AAAAの問い合わせ}
+    \label{fig:ws_31_v4_query}
+  \end{figure}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.98\columnwidth]{fig/wireshark_31_v4_answer.png}
+    \caption{IPv4のみのホストのA・AAAAの応答}
+    \label{fig:ws_31_v4_answer}
+  \end{figure}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.98\columnwidth]{fig/wireshark_31_v46_query.png}
+    \caption{両対応のホストのA・AAAAの問い合わせ}
+    \label{fig:ws_31_v46_query}
+  \end{figure}
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[width=0.98\columnwidth]{fig/wireshark_31_v46_answer.png}
+    \caption{両対応のホストのA・AAAAの応答}
+    \label{fig:ws_31_v46_answer}
+  \end{figure}
+
+  IPv4のみのホスト(www.city.sapporo.jp)では，図\ref{fig:ws_31_v4_query}のとおり，No.【要記入】でAレコード，No.【要記入】でAAAAレコードの問い合わせが，リゾルバ【要記入】(UDP 53番ポート)に送られた．図\ref{fig:ws_31_v4_answer}では，Aの応答にアドレス【要記入】(TTL【要記入】秒)が含まれている一方，AAAAの応答には【要記入：アドレスが含まれない／CNAMEのみ】．これは，このホストがIPv6のアドレスを持たないことを示す．出力\ref{out:dnspy_v4}の実行結果も【要記入】と一致する．
+
+  両対応のホスト(www.pref.hokkaido.lg.jp)では，図\ref{fig:ws_31_v46_query}のとおり，同様にAとAAAAの問い合わせが送られ，図\ref{fig:ws_31_v46_answer}ではAの応答にIPv4アドレス【要記入】，AAAAの応答にIPv6アドレス【要記入】が含まれた．TTLはそれぞれ【要記入】秒，【要記入】秒であった．【CNAMEを経由している場合：問い合わせた名前から別の名前(【要記入】)へのCNAMEが返り，その先のアドレスが得られている．】
+
+  2つのホストを比べると，どちらでもAとAAAAの2種類の問い合わせが送られており，問い合わせの手順は同じである．違いは応答の内容にあり，IPv4のみのホストではAAAAの応答にアドレスがなく，両対応のホストでは両方のアドレスが得られた．【リゾルバの宛先や，AとAAAAの問い合わせが送られる順序・間隔について気づいたことがあれば記述】
+\end{maintask}
