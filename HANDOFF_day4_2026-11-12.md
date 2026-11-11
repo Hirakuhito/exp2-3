@@ -1,71 +1,65 @@
-# 引継ぎ：ネットワークプログラミング実験 4日目
+# 引継ぎ：ネットワークプログラミング実験
 
 更新日：2026-11-12（日本時間）
 
-## ユーザーの希望
+## ユーザーの進め方
 
-- 実験は「一度に一つずつ」指示する。ユーザーがコマンドを実行して出力を貼ったら、結果を確認してから次の手順を出す。
-- まとめて先の手順を列挙しない。日本語で、実行する端末・コマンド・期待する表示を具体的に伝える。
-- ユーザーは作業者としてコマンドを実行する。こちらは画面や出力を見て手順を案内する。
+- 演習は一度に一つずつ案内する。ユーザーが端末で実行して出力を貼ったら、結果を確認してから次の手順を出す。
+- 先の手順をまとめて列挙しない。日本語で、実行する端末、コマンド、期待する表示を具体的に伝える。
+- ユーザーが演習端末 `host82` で実作業する。こちらは出力確認、判断、レポート編集を行う。
+- 現在は5日目・6日目の実験を始めていない。ユーザーが再開を希望したら、5日目から同じ一手ずつの形式で始める。
 
 ## 作業場所・資料
 
-- ローカル作業ディレクトリ：`\\wsl.localhost\Ubuntu-22.04\home\hito\documents\hokudai\2026\experiments\exp2\3`
-- 4日目の演習環境：`host82`、ディレクトリ `~/socket`
-- host82ではIPv4/IPv6のTCPサンプルを切り替えるため、同じファイルにIPv4/IPv6用の`with socket.socket(...)`が両方有効なことがあった。実行前に該当箇所を確認する。
+- 作業ディレクトリ：`\\wsl.localhost\Ubuntu-22.04\home\hito\documents\hokudai\2026\experiments\exp2\3`
+- 4日目の演習端末：`host82`、ディレクトリ `~/socket`
 - 後半指導書：`C:\Users\takuto\Downloads\ネットワークプログラミング指導書後半20261109.pdf`
-- 指導書の4日目課題は4-1〜4-8。4-3のみ「上級課題」と明記。
-- レポート全体の要件（前半指導書）：4〜6日目は作成したプログラムのソースコードとコマンド実行結果。4-2、4-3は課題にWireshark確認が含まれるため、キャプチャ画面も記録する。
+- 報告書：`report/main.tex`、PDF：`report/main.pdf`
 
-## 4日目の進捗
+## 4日目の実験状況
 
-### 4-1 UDPサーバ・クライアント：完了
+- 4-1 UDP：完了。クライアントから `Hey!` を送信し、サーバの応答 `Are you talking to me?` を確認。
+- 4-2 DNS ID：完了。`www.iic.hokudai.ac.jp` の問い合わせでID `52921`（`0xceb9`）。QueryとResponseのID一致をWiresharkで確認。応答アドレスは `133.50.42.161`。
+- 4-3 DNS形式（上級課題）：完了。Transaction ID `0xceb9`、Flags `0x0100`、質問数1、QR=0、Opcode=0、TC=0、RD=1、AD=0。QNAME `www.iic.hokudai.ac.jp`、QTYPE A、QCLASS IN。
+- 4-4 TCP：完了。IPv4で `Test message.` を送受信。
+- 4-5 echo：完了。`172.28.0.200:7` に `Hello World.` を送り、同じ文字列の応答を確認。
+- 4-6 TCP/6789：完了。`172.28.0.200:6789` に `Hello message.` を送り、同じ文字列の応答を確認。実行記録に応答時間がないため、遅延の程度は評価できないとレポートに記載。
+- 4-7 IPv6サーバ：完了。`tcp_server_select.py`（`How are you doing.`）、`tcp_server_fork.py`（`Text.`）、`tcp_server_multithreading.py`（`Test message.`）のそれぞれで `::1` 経由の送受信を確認。
+- 4-8 forkプロセス：完了。`ps -ef | grep tcp_server_fork.py` で親PID 1746と子PID 1748（PPID 1746）を確認。
 
-- `~/socket/udp_server.py`を起動し、別端末から`udp_client.py`を実行。
-- クライアント出力：`Are you talking to me?`
-- サーバ出力：`('127.0.0.1', 40714) said, Hey!`
-- クライアントは`Hey!`を送信し、サーバ応答を受信できた。
+## レポート状況
 
-### 4-2 DNS Query IDとResponse ID：確認完了
+- `report/main.tex` から4-1〜4-8を読み込む。
+- `report/tasks/day4_1.tex`〜`day4_8.tex`に実験結果と考察を反映済み。
+- 4-1、4-2、4-4、4-7のソースコードと、4-5・4-6のクライアント設定を反映済み。受け取った元ファイルは `report/src/day4/` に保存。
+- 4-2と4-3のWireshark画像を `report/fig/` に保存。4-3は全体画面、Flags、Query詳細の3枚を使用。
+- 4-2の長いソースコードを4つの掲載箇所に分け、ページからはみ出す問題を修正。図の `[h]` 指定は `[htbp]` に変更し、4-7の課題説明も短くした。
+- ユーザーがコンパイル成功を確認。`report/main.pdf` は存在し、更新日時は2026-11-12 02:15頃。
+- `caption` パッケージの `Unknown document class` は `ltjsarticle` に対する非致命的警告。参照ラベルは定義済みで、初回コンパイル時は再実行が必要。現環境のLuaLaTeXはNoto Serif CJK JPを見つけられないため、ユーザー側でコンパイルする。
 
-- キャプチャコマンド：
-  `tcpdump -i eth1 -s 0 -w day4_2_dns.pcap 'not port 4200'`
-- 停止出力：35 packets captured、37 received by filter、0 dropped。
-- 実行コマンド：`./socket_dns_test.py www.iic.hokudai.ac.jp`
-- プログラム出力ID：`52921`（16進数では`0xceb9`）。応答は`133.50.42.161`。
-- Wiresharkフィルタ：`dns.qry.name == "www.iic.hokudai.ac.jp"`
-- ユーザーはQueryとResponseのTransaction IDがともに`0xceb9`であることを確認し、スクリーンショットを撮影済み。
-- pcapは演習環境上の`~/socket/day4_2_dns.pcap`。ローカルWiresharkで開くためダウンロード済み。スクリーンショットは指定名`wireshark_day4_2_dns_id.png`でレポート用フォルダに保存するよう案内したが、保存場所・保存完了は未確認。
+## 5日目・6日目の課題と目安
 
-### 4-4 TCPサーバ・クライアント：動作確認完了
+5日目はウェブアクセス、TLS、メール送信で、次の課題がある。
 
-- `tcp_server.py`の19行目IPv4行と20行目IPv6行が両方有効だったためIndentationErrorが発生。
-- ユーザーが20行目をコメントアウト：
-  `#with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as server:`
-- 19行目IPv4のサーバを起動できた。
-- `tcp_client.py`はIPv4設定：`HOSTNAME = '127.0.0.1'`、`PORT_NUM = 6789`、AF_INET。
-- クライアントに`Test message.`を入力し、`Echo back text: Test message.`を確認。
-- サーバにも`Received text: Test message. from ('127.0.0.1', 55982)`と表示。
+- 5-1：telnetでHTTP/1.0とHTTP/1.1のGETを試し、実行画面を記録。
+- 5-2：`wget_socket.py`をHTTP/1.1対応に拡張。
+- 5-3：HTTPクライアントをTLS対応にし、接続先ホスト名を起動引数から受け取る。
+- 5-4：デバッグ用SMTPサーバにtelnetで接続してメールを手動送信。
+- 5-5：仕様に合わせて`smtp.py`を作成し、デバッグ用サーバで送信・表示確認。
+- 5-6：上級課題。普段使うメールサーバを経由して自分宛てにメール送信。
 
-## 現在の状態／次にすること
+目安は5-1〜5-5で約2〜4時間、5-6は追加で1時間以上。メール設定や環境の問題で延びる可能性がある。
 
-- 直前の案内は、4-4のTCPサーバ端末で`Ctrl+C`を押して停止すること。ユーザーはまだ停止したと報告していない。
-- まずサーバ停止を確認する。
-- 次は4-5：`tcp_client.py`を`HOSTNAME = '172.28.0.200'`、`PORT_NUM = 7`に変更し、AF_INETでecho (7/tcp)に接続する。実行時に入力文字列と返ってきた文字列を確認する。
-- 一度に一手順だけ案内し、出力を待ってから続ける。
+6日目はIPv4/IPv6両対応のTCPクライアント・サーバ。
 
-## 残りの演習（指導書記載）
+- 6-1：AF_INET/AF_INET6と宛先IPの組合せで接続可否を確認。
+- 6-2：IPv6専用サーバにIPv4クライアントから接続し、IPv4射影アドレスを確認。
+- 6-3：両対応クライアントでIPv4・IPv6両方の宛先へ接続。
+- 6-4：IPv6のみ待受けとIPv4/IPv6両方待受けで`netstat -na`の違いを確認。
+- 6-5：上級課題。select版サーバをfork版とマルチスレッド版に拡張。
 
-- 4-5：TCPクライアントで`172.28.0.200`のecho（7/tcp）に接続。
-- 4-6：TCPクライアントで`172.28.0.200:6789`に接続し、混雑時にすぐ返事が返らないことを観察。
-- 4-7：IPv6対応の`tcp_server_select.py`、`tcp_server_fork.py`、`tcp_server_multithreading.py`の動作を確認。クライアントもIPv6対応にする。
-- 4-8：`tcp_server_fork.py`実行時に、`ps`でプロセスが増えたことを確認。
-- 4-3は上級課題で、ユーザーの希望に応じて実施する。
+目安は6-1〜6-4で約1〜2時間、6-5は追加で1〜2時間以上。いずれも課題内容からの概算。
 
-## 作成済みレポート雛形
+## 次に再開するとき
 
-`report/tasks/day4_1.tex`〜`report/tasks/day4_8.tex`を作成済み。4-3は`extask`環境。他は`maintask`環境。
-
-要件まとめは`report/day4_requirements.md`。
-
-**未実施：** day4各TeXはまだ`report/main.tex`に追加していないため、現行PDFには反映されていない。ユーザーが実験結果を貼った後、該当するテンプレートを埋め、必要なスクリーンショットとソースコードも反映する。
+ユーザーは5日目・6日目の所要時間の目安を確認し、いったん作業を保留中。再開時は5-1から始め、実行結果ごとに一手ずつ案内する。レポートの4日目作業は完了。
